@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"crudDemo/helpers"
 	"crudDemo/models"
 	requestStruct "crudDemo/requstStruct"
 	"encoding/json"
@@ -61,15 +60,15 @@ func (c *UserController) Login() {
 	c.ServeJSON()
 }
 
-func (u *UserController) RegisterUser() {
-	var user requestStruct.InsertUser
-	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-	result, _ := models.RegisterUser(user)
-	if result != nil {
-		helpers.ApiSuccessResponse(u.Ctx.ResponseWriter, "", "Register Successfully User Please Login Now")
-	}
-	helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Please Try Again")
-}
+// func (u *UserController) RegisterUser() {
+// 	var user requestStruct.InsertUser
+// 	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+// 	result, _ := models.RegisterUser(user)
+// 	if result != nil {
+// 		helpers.ApiSuccessResponse(u.Ctx.ResponseWriter, "", "Register Successfully User Please Login Now")
+// 	}
+// 	helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Please Try Again")
+// }
 
 // func (u *UserController) LoginUser() {
 // 	var user requestStruct.LoginUser

@@ -1,18 +1,15 @@
 package helpers
 
 import (
-	"github.com/astaxie/beego/context"
-
 	"encoding/json"
 	"net/http"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 type ResponseSuccess struct {
-	ResStatus int         `json:"status"`
-	Message   string      `json:"message"`
-	Result    interface{} `json:"data"`
+	ResStatus  int         `json:"status"`
+	Message    string      `json:"message"`
+	Pagination interface{} `json:"pagination"`
+	Result     interface{} `json:"data"`
 }
 
 type ResponseFailed struct {
@@ -20,14 +17,25 @@ type ResponseFailed struct {
 	Message   string `json:"message"`
 }
 
-func ApiSuccessResponse(w http.ResponseWriter, result interface{}, message string) {
+type PaginationRes struct {
+	CurrentPage interface{} `json:"current_page"`
+	TotalPages  interface{} `json:"total_pages"`
+}
+
+func ApiSuccessResponse(w http.ResponseWriter, result interface{}, message string, totalPages, currentPage interface{}) {
 	if result == "" {
 		result = map[int]int{}
 	}
+	if totalPages == "" && currentPage == "" {
+		totalPages = 1
+		currentPage = 1
+	}
+	pagination := PaginationRes{CurrentPage: currentPage, TotalPages: totalPages}
 	response := ResponseSuccess{
-		Message:   message,
-		ResStatus: 1,
-		Result:    result,
+		Message:    message,
+		ResStatus:  1,
+		Pagination: pagination,
+		Result:     result,
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -52,12 +60,5 @@ func ApiFailedResponse(w http.ResponseWriter, message string) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
-}
 
-func GetTokenClaims(c *context.Context) map[string]interface{} {
-	token_claims := c.Input.GetData("LoginUserData")
-	user_id := token_claims.(jwt.MapClaims)["user_id"]
-	user_email := token_claims.(jwt.MapClaims)["user_email"]
-	response := map[string]interface{}{"User_id": user_id, "User_Email": user_email}
-	return response
 }

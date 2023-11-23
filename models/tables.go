@@ -15,6 +15,13 @@ type UserMasterTable struct {
 	Mobile      string    `orm:"size(255)"`
 	CreatedDate time.Time `orm:"type(datetime)"`
 }
+type CarsTypes string
+
+const (
+	Suv       CarsTypes = "suv"
+	Sedan     CarsTypes = "sedan"
+	HatchBack CarsTypes = "hatchback"
+)
 
 type CarsMasterTable struct {
 	CarsId      int    `orm:"auto"`
@@ -22,9 +29,10 @@ type CarsMasterTable struct {
 	Description string `orm:"size(255)"`
 	CreatedBy   int
 	UpdatedBy   int
-	CarsImage   string    `orm:"null"`
+	CarsImage   string
+	CarTypes    CarsTypes `orm:column(car_types);type(Enum)`
 	CreatedDate time.Time `orm:"type(date)"`
-	UpdatedDate time.Time `orm:"type(date);default:null"`
+	UpdatedDate time.Time `orm:"type(date)"`
 }
 
 func init() {
