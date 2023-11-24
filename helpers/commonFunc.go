@@ -84,3 +84,8 @@ func SplitFilePath(car string) (string, string) {
 
 	return fileDirectory, fileName
 }
+
+func UniqueCode(insertedId int, withString string) string {
+	result := fmt.Sprintf("%s_%d", withString, insertedId)
+	return strings.ToUpper(result)
+}

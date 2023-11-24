@@ -35,9 +35,21 @@ type CarsMasterTable struct {
 	UpdatedDate time.Time `orm:"type(date)"`
 }
 
+type HomePagesSettingTable struct {
+	PageSettingId int `orm:"auto"`
+	Section       string
+	DataType      string `orm:"size(255)"`
+	UniqueCode    string
+	SettingData   string `orm:"type(text)"`
+	CreatedDate   time.Time
+	UpdatedDate   time.Time
+	CreatedBy     int
+	UpdatedBy     int
+}
+
 func init() {
 	orm.RegisterDriver("postgres", orm.DRPostgres)
 	orm.RegisterDataBase("default", "postgres", "user=postgres password=Dev@123 host=localhost port=5432 dbname=golang_practice sslmode=disable")
-	orm.RegisterModel(new(UserMasterTable), new(CarsMasterTable))
+	orm.RegisterModel(new(UserMasterTable), new(CarsMasterTable), new(HomePagesSettingTable))
 	orm.RunSyncdb("default", false, true)
 }

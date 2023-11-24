@@ -6,10 +6,10 @@ import (
 )
 
 type ResponseSuccess struct {
-	ResStatus  int         `json:"status"`
-	Message    string      `json:"message"`
-	Pagination interface{} `json:"pagination"`
-	Result     interface{} `json:"data"`
+	ResStatus int    `json:"status"`
+	Message   string `json:"message"`
+	// Pagination interface{} `json:"pagination"`
+	Result interface{} `json:"data"`
 }
 
 type ResponseFailed struct {
@@ -30,12 +30,12 @@ func ApiSuccessResponse(w http.ResponseWriter, result interface{}, message strin
 		totalPages = 1
 		currentPage = 1
 	}
-	pagination := PaginationRes{CurrentPage: currentPage, TotalPages: totalPages}
+	// pagination := PaginationRes{CurrentPage: currentPage, TotalPages: totalPages}
 	response := ResponseSuccess{
-		Message:    message,
-		ResStatus:  1,
-		Pagination: pagination,
-		Result:     result,
+		Message:   message,
+		ResStatus: 1,
+		// Pagination: pagination,
+		Result: result,
 	}
 
 	jsonResponse, err := json.Marshal(response)

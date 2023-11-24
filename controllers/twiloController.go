@@ -9,7 +9,6 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/sfreiberg/gotwilio"
-	// "github.com/sfreiberg/gotwilio"
 )
 
 type ThirdPartyOtpSend struct {
