@@ -16,16 +16,18 @@ func RoutersFunction() {
 
 	user := beego.NewNamespace("/v1",
 		beego.NSNamespace("/user",
+			beego.NSRouter("/add_user", userController, "post:RegisterUser"),
+
 			beego.NSRouter("/login", userController, "post:Login"),
-			// beego.NSRouter("/send_otp", thirdpartyOTP, "post:SendOTP"),
-			// beego.NSRouter("/add_user", userController, "post:RegisterUser"),
+			beego.NSRouter("/send_otp", userController, "post:SendMailForm"),
+			beego.NSRouter("/verify_email", userController, "post:VerifyEmail"),
 		),
 		beego.NSNamespace("/cars",
 			beego.NSBefore(middelware.Auth),
 
-			// beego.NSRouter("/register_car", carsController, "post:RegisterCar"),
-			// beego.NSRouter("/update_cars", carsController, "post:UpdateCar"),
-			// beego.NSRouter("/delete_cars", carsController, "post:DeleteCar"),
+			beego.NSRouter("/register_car", carsController, "post:RegisterCar"),
+			beego.NSRouter("/update_cars", carsController, "post:UpdateCar"),
+			beego.NSRouter("/delete_cars", carsController, "post:DeleteCar"),
 			beego.NSRouter("/fetch_cars", carsController, "post:FetchCar"),
 		),
 
@@ -35,6 +37,7 @@ func RoutersFunction() {
 			beego.NSRouter("/update_settings", homeSettingController, "post:UpdateSettings"),
 			beego.NSRouter("/fetch_settings", homeSettingController, "post:FetchSettings"),
 			beego.NSRouter("/delete_settings", homeSettingController, "post:DeleteSetting"),
+			// beego.NSRouter("/send_otp", homeSettingController, "post:SendMailForm"),
 
 			// beego.NSRouter("/delete_cars", carsController, "post:DeleteCar"),
 			// beego.NSRouter("/fetch_cars", carsController, "post:FetchCar"),

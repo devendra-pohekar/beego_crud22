@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/beego/beego/orm"
+	// "github.com/astaxie/beego/orm"
 )
 
 func RegisterSetting(c requestStruct.HomeSeetingInsert, user_id float64, file_path interface{}) (int, error) {
@@ -55,54 +57,45 @@ func UpdateUniqueCode(user_id int) (int64, error) {
 	return 1, nil
 }
 
-func UpdateSetting(c requestStruct.HomeSeetingUpdate, file_path string, user_id float64) (int64, error) {
+func UpdateSetting(c requestStruct.HomeSeetingUpdate, file_path interface{}, user_id float64) (int64, error) {
 	db := orm.NewOrm()
-	log.Print("-------------------gggggggggggggggg", file_path)
 	page_setting_id := c.SettingId
-	/* if setting data found than already exists file in the give directory will be remove and new updated file will insert into folder and also update in database column */
-	homePageSetting, err := FetchPageSettingByID(page_setting_id)
-	log.Print("-------------------dddddddddddddddd")
-
+	homePageSetting, setting_data_type, err := FetchPageSettingByID(page_setting_id)
 	if err != nil {
 		return 0, err
 	}
 
 	if file_path == "" {
 		file_path = c.SettingData
-	} else {
+	}
+	setting_dataType := strings.ToUpper(setting_data_type)
+	if setting_dataType == "LOGO" || setting_dataType == "BANNER" {
 		file_name, file_directory := helpers.SplitFilePath(homePageSetting)
 		helpers.RemoveFile(file_name, file_directory)
-		log.Print("-------------------eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", file_name, file_directory)
 
 	}
-
-	homePageData := HomePagesSettingTable{PageSettingId: page_setting_id}
-	log.Print("-------------------jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj", homePageData)
-
-	if db.Read(&homePageSetting) == nil {
-		homePageData.UpdatedBy = int(user_id)
-		homePageData.UpdatedDate = time.Now()
-		homePageData.DataType = c.DataType
-		homePageData.Section = c.Section
-		homePageData.SettingData = file_path
-		if num, err := db.Update(&homePageData); err == nil {
-			return num, nil
-		}
+	homePageData := HomePagesSettingTable{PageSettingId: page_setting_id,
+		UpdatedBy:   int(user_id),
+		UpdatedDate: time.Now(),
+		DataType:    c.DataType,
+		Section:     c.Section,
+		SettingData: file_path.(string),
 	}
-	log.Print("-------------------qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
-
+	if num, err := db.Update(&homePageData, "updated_by", "updated_date", "data_type", "section", "setting_data"); err == nil {
+		return num, nil
+	}
 	return 1, nil
 
 }
 
-func FetchPageSettingByID(pageSettingID int) (string, error) {
+func FetchPageSettingByID(pageSettingID int) (string, string, error) {
 	db := orm.NewOrm()
 	var pageSetting HomePagesSettingTable
-	err := db.Raw(`SELECT  setting_data FROM home_pages_setting_table WHERE page_setting_id = ?`, pageSettingID).QueryRow(&pageSetting)
+	err := db.Raw(`SELECT  setting_data,data_type FROM home_pages_setting_table WHERE page_setting_id = ?`, pageSettingID).QueryRow(&pageSetting)
 	if err != nil {
-		return "Some errro occured in fetch page setting by ID function", err
+		return "Some errro occured in fetch page setting by ID function", "some errror", err
 	}
-	return pageSetting.SettingData, nil
+	return pageSetting.SettingData, pageSetting.DataType, nil
 }
 
 func DeleteSetting(page_setting_id int) int {
@@ -117,13 +110,17 @@ func DeleteSetting(page_setting_id int) int {
 
 func HomePageSettingExistsDelete(u requestStruct.HomeSeetingDelete) int {
 	page_setting_id := u.SettingId
-	page_setting_data, err := FetchPageSettingByID(page_setting_id)
+
+	page_setting_data, page_setting_type, err := FetchPageSettingByID(page_setting_id)
 	if err != nil {
 		return 0
 	}
-	file_name, file_directory := helpers.SplitFilePath(page_setting_data)
-	log.Print(file_directory, file_name, "--------------------------7777777777777777777")
-	helpers.RemoveFile(file_name, file_directory)
+
+	if strings.ToUpper(page_setting_type) == "LOGO" || strings.ToUpper(page_setting_type) == "BANNER" {
+		file_name, file_directory := helpers.SplitFilePath(page_setting_data)
+		helpers.RemoveFile(file_name, file_directory)
+	}
+
 	DeleteSetting(page_setting_id)
 	return 1
 
@@ -139,14 +136,45 @@ func FetchSetting() (interface{}, error) {
 		UpdatedDate time.Time `json:"updated_date"`
 		CreatedBy   string    `json:"created_by"`
 	}
-	_, err := db.Raw(`SELECT section, data_type, setting_data,created_date, updated_date ,created_by FROM home_pages_setting_table `).QueryRows(&homeResponse)
+	_, err := db.Raw(`SELECT hpst.section, hpst.data_type, hpst.setting_data,hpst.created_date, hpst.updated_date ,concat(umt.first_name,' ',umt.last_name) as created_by  FROM home_pages_setting_table as hpst LEFT JOIN user_master_table as umt ON umt.user_id = hpst.created_by`).QueryRows(&homeResponse)
 
 	if err != nil {
 		return nil, err
 	}
-
 	if len(homeResponse) == 0 {
 		return "Not Found Cars", nil
 	}
 	return homeResponse, nil
 }
+
+// func FetchSetting() (interface{}, error) {
+// 	db := orm.NewOrm()
+// 	var homeResponse []struct {
+// 		Section     string    `json:"section"`
+// 		DataType    string    `json:"data_type"`
+// 		SettingData string    `json:"setting_data"`
+// 		CreatedDate time.Time `json:"created_date"`
+// 		UpdatedDate time.Time `json:"updated_date"`
+// 		CreatedBy   string    `json:"created_by"`
+// 	}
+
+// 	// Execute the SQL query and check for errors
+// 	_, err := db.Raw(`
+// 		SELECT hpst.section, hpst.data_type, hpst.setting_data, hpst.created_date, hpst.updated_date,umt.first_name
+// 		FROM home_pages_setting_table AS hpst
+// 		LEFT JOIN user_master_table AS umt ON umt.user_id = hpst.created_by
+// 	`).QueryRows(&homeResponse)
+
+// 	// Check for query execution errors
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Check if no data is found
+// 	if len(homeResponse) == 0 {
+// 		return "Not Found Cars", nil
+// 	}
+
+// 	// Return the data if successful
+// 	return homeResponse, nil
+// }

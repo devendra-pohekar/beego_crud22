@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"crudDemo/helpers"
 	"crudDemo/models"
 	requestStruct "crudDemo/requstStruct"
 	"encoding/json"
@@ -43,6 +44,10 @@ func (c *UserController) Login() {
 		return
 	}
 	loginUserData := models.LoginUsers(user)
+	if loginUserData.IsVerified == 0 {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Please Verified Email Address")
+		return
+	}
 	tokenExpire := time.Now().Add(1 * time.Hour)
 	claims := &JwtClaim{Email: loginUserData.Email, UserID: loginUserData.UserId, StandardClaims: jwt.StandardClaims{
 		ExpiresAt: tokenExpire.Unix(),
@@ -60,15 +65,26 @@ func (c *UserController) Login() {
 	c.ServeJSON()
 }
 
-// func (u *UserController) RegisterUser() {
-// 	var user requestStruct.InsertUser
-// 	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-// 	result, _ := models.RegisterUser(user)
-// 	if result != nil {
-// 		helpers.ApiSuccessResponse(u.Ctx.ResponseWriter, "", "Register Successfully User Please Login Now")
-// 	}
-// 	helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Please Try Again")
-// }
+func (u *UserController) RegisterUser() {
+	var user requestStruct.InsertUser
+	if err := u.ParseForm(&user); err != nil {
+		helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Parsing Data Error")
+		return
+	}
+	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+	user_email, _, _, _ := models.VerifyEmail(user.Email)
+
+	if user_email == user.Email {
+		helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Use Another Email ! This Email Address Already Exists")
+		return
+	}
+	result, _ := models.RegisterUser(user)
+	if result != nil {
+		helpers.ApiSuccessResponse(u.Ctx.ResponseWriter, "", "Register Successfully User Please Login Now", "", "")
+		return
+	}
+	helpers.ApiFailedResponse(u.Ctx.ResponseWriter, "Please Try Again")
+}
 
 // func (u *UserController) LoginUser() {
 // 	var user requestStruct.LoginUser
@@ -81,3 +97,42 @@ func (c *UserController) Login() {
 // 		// helpers.ApiFailedResponse(u.Controller, "Invalid Email and Password Please Try Again")
 // 	}
 // }
+
+func (c *UserController) SendMailForm() {
+	var requestData requestStruct.SendMailUser
+
+	if err := c.ParseForm(&requestData); err != nil {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Parsing Data Error")
+		return
+	}
+
+	json.Unmarshal(c.Ctx.Input.RequestBody, &requestData)
+	email, user_first_name, is_verified, user_id := models.VerifyEmail(requestData.Email)
+	if email == requestData.Email && is_verified == 0 {
+		result, _ := helpers.SendOTpOnMail(requestData.Email, user_first_name)
+		models.FirstOTPUpdate(email, user_first_name, result, user_id)
+		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, result, "Verification Mail Send On The Given User Email Address ,Please verified first", "", "")
+		return
+	}
+	helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Please Provide Valid Email Address ! , Try Again")
+
+}
+
+func (c *UserController) VerifyEmail() {
+	var requestData requestStruct.EmailVerfiy
+
+	if err := c.ParseForm(&requestData); err != nil {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Parsing Data Error")
+		return
+	}
+	json.Unmarshal(c.Ctx.Input.RequestBody, &requestData)
+	if requestData.OTP == "" {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "OTP Should Not be Empty")
+	}
+	user_email, user_id := models.VerifyOTP(requestData.OTP)
+	if user_email != "" && user_id != 0 {
+		models.UpdateVerifiedStatus(user_email, user_id)
+		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, "", "User Verified Successfully ", "", "")
+	}
+
+}

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/beego/beego/orm"
+	// "github.com/astaxie/beego/orm"
+
 	_ "github.com/lib/pq"
 )
 
