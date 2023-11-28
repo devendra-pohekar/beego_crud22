@@ -3,8 +3,6 @@ package models
 import (
 	"crudDemo/helpers"
 	requestStruct "crudDemo/requstStruct"
-	"encoding/json"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -17,9 +15,8 @@ func RegisterSetting(c requestStruct.HomeSeetingInsert, user_id float64, file_pa
 	db := orm.NewOrm()
 	if file_path == "" {
 
-		file_path, _ = json.Marshal(c.SettingData)
-		file_path = string(file_path.([]byte))
-		log.Print("----------------------------------------------", file_path)
+		file_path = c.SettingData
+
 	}
 
 	res := HomePagesSettingTable{
@@ -29,7 +26,7 @@ func RegisterSetting(c requestStruct.HomeSeetingInsert, user_id float64, file_pa
 		SettingData: file_path.(string),
 		CreatedBy:   int(user_id),
 		UpdatedBy:   0,
-		UpdatedDate: time.Now(),
+		// UpdatedDate: time.Now(),
 		CreatedDate: time.Now(),
 	}
 
@@ -37,7 +34,6 @@ func RegisterSetting(c requestStruct.HomeSeetingInsert, user_id float64, file_pa
 	if err != nil {
 		return 0, err
 	}
-	log.Print("----------------------44444444444------------------------", file_path)
 	lastInsertID := res.PageSettingId
 	UpdateUniqueCode(lastInsertID)
 	return lastInsertID, nil

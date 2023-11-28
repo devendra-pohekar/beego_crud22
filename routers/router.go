@@ -2,7 +2,6 @@ package routers
 
 import (
 	"crudDemo/controllers"
-	"crudDemo/middelware"
 
 	"github.com/astaxie/beego"
 )
@@ -21,9 +20,11 @@ func RoutersFunction() {
 			beego.NSRouter("/login", userController, "post:Login"),
 			beego.NSRouter("/send_otp", userController, "post:SendMailForm"),
 			beego.NSRouter("/verify_email", userController, "post:VerifyEmail"),
+			beego.NSRouter("/send_otp_forgot", userController, "post:SendMailForForgotPassword"),
+			beego.NSRouter("/verify_otp_forgot", userController, "post:ForgotPasswordUpdate"),
 		),
 		beego.NSNamespace("/cars",
-			beego.NSBefore(middelware.Auth),
+			// beego.NSBefore(middelware.Auth),
 
 			beego.NSRouter("/register_car", carsController, "post:RegisterCar"),
 			beego.NSRouter("/update_cars", carsController, "post:UpdateCar"),
@@ -32,7 +33,7 @@ func RoutersFunction() {
 		),
 
 		beego.NSNamespace("/homepage",
-			beego.NSBefore(middelware.Auth),
+			// beego.NSBefore(middelware.Auth),
 			beego.NSRouter("/register_settings", homeSettingController, "post:RegisterSettings"),
 			beego.NSRouter("/update_settings", homeSettingController, "post:UpdateSettings"),
 			beego.NSRouter("/fetch_settings", homeSettingController, "post:FetchSettings"),

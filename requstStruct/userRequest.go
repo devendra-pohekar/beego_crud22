@@ -26,3 +26,12 @@ type EmailVerfiy struct {
 	Email string `json:"email" form:"email"`
 	OTP   string `json:"otp" form:"otp"`
 }
+
+type SendMailForgotPassword struct {
+	Email string `json:"email" form :"email"`
+}
+
+type ForgotPassword struct {
+	OTP         string `json:"otp" form:"otp"`
+	NewPassword string `json:"new_password" form :"new_password"`
+}

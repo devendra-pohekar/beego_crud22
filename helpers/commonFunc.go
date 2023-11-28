@@ -21,9 +21,12 @@ func HashPassword(password string) string {
 	return string(bytes)
 }
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(password), []byte(hash))
-	return err == nil
+func CheckPasswordHash(password, hash string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetTokenClaims(c *context.Context) map[string]interface{} {
@@ -81,6 +84,7 @@ func SplitFilePath(SplitString string) (string, string) {
 }
 
 func UniqueCode(insertedId int, withString string) string {
+	withString = strings.ReplaceAll(withString, " ", "_")
 	result := fmt.Sprintf("%s_%d", withString, insertedId)
 	return strings.ToUpper(result)
 }

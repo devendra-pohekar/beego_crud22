@@ -18,6 +18,7 @@ type UserMasterTable struct {
 	OtpCode     string    `orm:size(255)`
 	CreatedDate time.Time `orm:"type(datetime)"`
 }
+
 type CarsTypes string
 
 const (
@@ -35,7 +36,7 @@ type CarsMasterTable struct {
 	CarsImage   string
 	CarTypes    CarsTypes `orm:column(car_types)`
 	CreatedDate time.Time `orm:"type(date)"`
-	UpdatedDate time.Time `orm:"type(date)"`
+	UpdatedDate time.Time `orm:"null"`
 }
 
 type HomePagesSettingTable struct {
@@ -45,7 +46,7 @@ type HomePagesSettingTable struct {
 	UniqueCode    string
 	SettingData   string `orm:"type(text)"`
 	CreatedDate   time.Time
-	UpdatedDate   time.Time
+	UpdatedDate   time.Time `orm:"null"`
 	CreatedBy     int
 	UpdatedBy     int
 }
@@ -74,7 +75,6 @@ func init() {
 	orm.RegisterDriver("postgres", orm.DRPostgres)
 	orm.RegisterDataBase("default", "postgres", "user=postgres password=Dev@123 host=localhost port=5432 dbname=golang_practice sslmode=disable")
 	orm.RegisterModel(new(UserMasterTable), new(CarsMasterTable), new(HomePagesSettingTable), new(CountriesTable), new(StatesTable), new(CitiesTable))
-	// orm.Debug = true
-
 	orm.RunSyncdb("default", false, true)
+
 }

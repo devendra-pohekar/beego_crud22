@@ -1,6 +1,7 @@
 package models
 
 import (
+	"crudDemo/helpers"
 	requestStruct "crudDemo/requstStruct"
 	"strings"
 	"time"
@@ -11,11 +12,13 @@ import (
 
 func RegisterUser(u requestStruct.InsertUser) (interface{}, error) {
 	db := orm.NewOrm()
+
+	hash_pass := helpers.HashPassword(u.Password)
 	res := UserMasterTable{
 		FirstName:   u.FirstName,
 		LastName:    u.LastName,
 		Email:       u.Email,
-		Password:    u.Password,
+		Password:    hash_pass,
 		Mobile:      u.Mobile,
 		CreatedDate: time.Now(),
 	}
@@ -27,18 +30,22 @@ func RegisterUser(u requestStruct.InsertUser) (interface{}, error) {
 
 }
 
-func LoginUsers(u requestStruct.LoginUser) UserMasterTable {
+func LoginUsers(u requestStruct.LoginUser) (UserMasterTable, error) {
 	db := orm.NewOrm()
-
 	res := UserMasterTable{
-		Email:    u.Email,
-		Password: u.Password,
+		Email: u.Email,
 	}
-	result := db.Read(&res, "Email", "Password")
+	result := db.Read(&res, "Email")
 	if result != nil {
-		panic("result")
+		return UserMasterTable{}, result
 	}
-	return res
+
+	err := helpers.CheckPasswordHash(u.Password, res.Password)
+	if err != nil {
+		return UserMasterTable{}, err
+
+	}
+	return res, nil
 }
 
 func VerifyEmail(user_email string) (string, string, int, int) {
@@ -84,6 +91,23 @@ func UpdateVerifiedStatus(email string, user_id int) int {
 	users := UserMasterTable{Email: emailID, UserId: user_id}
 	if db.Read(&users) == nil {
 		users.IsVerified = 1
+		users.OtpCode = ""
+		num, _ := db.Update(&users)
+		if num == 0 {
+			return 0
+		}
+	}
+	return 1
+
+}
+
+func UpdatePassword(email string, user_id int, updated_password string) int {
+	db := orm.NewOrm()
+	hash_updated_pass := helpers.HashPassword(updated_password)
+	users := UserMasterTable{Email: email, UserId: user_id}
+	if db.Read(&users) == nil {
+		users.Password = hash_updated_pass
+		users.OtpCode = ""
 		num, _ := db.Update(&users)
 		if num == 0 {
 			return 0

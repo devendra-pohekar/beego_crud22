@@ -6,6 +6,7 @@ import (
 	requestStruct "crudDemo/requstStruct"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -43,7 +44,12 @@ func (c *UserController) Login() {
 		c.CustomAbort(http.StatusBadRequest, "Invalid JSON format")
 		return
 	}
-	loginUserData := models.LoginUsers(user)
+	loginUserData, err := models.LoginUsers(user)
+	if err != nil {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Invalid Email And Password ! Try Again")
+		return
+	}
+
 	if loginUserData.IsVerified == 0 {
 		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Please Verified Email Address")
 		return
@@ -111,7 +117,7 @@ func (c *UserController) SendMailForm() {
 	if email == requestData.Email && is_verified == 0 {
 		result, _ := helpers.SendOTpOnMail(requestData.Email, user_first_name)
 		models.FirstOTPUpdate(email, user_first_name, result, user_id)
-		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, result, "Verification Mail Send On The Given User Email Address ,Please verified first", "", "")
+		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, "", "Verification Mail Send On The Given User Email Address ,Please verified first", "", "")
 		return
 	}
 	helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Please Provide Valid Email Address ! , Try Again")
@@ -134,5 +140,48 @@ func (c *UserController) VerifyEmail() {
 		models.UpdateVerifiedStatus(user_email, user_id)
 		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, "", "User Verified Successfully ", "", "")
 	}
+
+}
+
+func (c *UserController) SendMailForForgotPassword() {
+	var requestData requestStruct.SendMailForgotPassword
+	if err := c.ParseForm(&requestData); err != nil {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Parsing Data Error")
+		return
+	}
+
+	json.Unmarshal(c.Ctx.Input.RequestBody, &requestData)
+	log.Print("==============================", requestData.Email)
+
+	email, user_first_name, is_verified, user_id := models.VerifyEmail(requestData.Email)
+	if email == requestData.Email && is_verified == 1 {
+		result, _ := helpers.SendOTpOnMail(requestData.Email, user_first_name)
+		models.FirstOTPUpdate(email, user_first_name, result, user_id)
+		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, email, "OTP Verification Mail Send On The Register User Email Address ,Please verified OTP", "", "")
+		return
+	}
+
+	helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Please Provide Valid Email Address ! , Try Again")
+
+}
+
+func (c *UserController) ForgotPasswordUpdate() {
+	var requestData requestStruct.ForgotPassword
+	if err := c.ParseForm(&requestData); err != nil {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "Parsing Data Error")
+		return
+	}
+	json.Unmarshal(c.Ctx.Input.RequestBody, &requestData)
+	if requestData.OTP == "" || requestData.NewPassword == "" {
+		helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "OTP And Password Should Not be Empty ")
+		return
+	}
+	user_email, user_id := models.VerifyOTP(requestData.OTP)
+	if user_email != "" && user_id != 0 {
+		models.UpdatePassword(user_email, user_id, requestData.NewPassword)
+		helpers.ApiSuccessResponse(c.Ctx.ResponseWriter, "", "Password Change Successfully ", "", "")
+		return
+	}
+	helpers.ApiFailedResponse(c.Ctx.ResponseWriter, "OTP IS Expired PLEASE GO ON FORGOT PASSWORD SECTION")
 
 }
