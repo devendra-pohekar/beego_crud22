@@ -5,9 +5,9 @@ import (
 	requestStruct "crudDemo/requstStruct"
 	"time"
 
-	"github.com/beego/beego/orm"
 	// "github.com/astaxie/beego/orm"
 
+	"github.com/beego/beego/orm"
 	_ "github.com/lib/pq"
 )
 

@@ -3,6 +3,7 @@ package models
 import (
 	"crudDemo/helpers"
 	requestStruct "crudDemo/requstStruct"
+	"log"
 	"strings"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 func RegisterUser(u requestStruct.InsertUser) (interface{}, error) {
 	db := orm.NewOrm()
-
+	log.Print(u, " ---------------------------------------------------------------")
 	hash_pass := helpers.HashPassword(u.Password)
 	res := UserMasterTable{
 		FirstName:   u.FirstName,

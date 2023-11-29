@@ -6,11 +6,12 @@ import (
 	requestStruct "crudDemo/requstStruct"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/astaxie/beego"
+	// beego "github.com/beego/beego/v2/server/web"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -151,7 +152,7 @@ func (c *UserController) SendMailForForgotPassword() {
 	}
 
 	json.Unmarshal(c.Ctx.Input.RequestBody, &requestData)
-	log.Print("==============================", requestData.Email)
+	// log.Print("==============================", requestData.Email)
 
 	email, user_first_name, is_verified, user_id := models.VerifyEmail(requestData.Email)
 	if email == requestData.Email && is_verified == 1 {

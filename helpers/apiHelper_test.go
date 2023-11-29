@@ -6,7 +6,7 @@ import (
 )
 
 func TestSendOTpOnMail(t *testing.T) {
-	mail, err := SendOTpOnMail("devendrapohekar.siliconithub@gmail.com", "devendra")
+	mail, err := SendOTpOnMail("devendrapohekar.siliconithub@gmail.com", "Devendra Pohekar")
 	if err != nil {
 		log.Print(err)
 	}
